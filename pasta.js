@@ -18,38 +18,47 @@ function doVis(url) {
 	//remove old svgs
 	d3.selectAll("svg").remove();
 	
-	// format the data and find min/max
-	var minX = Number.MAX_SAFE_INTEGER;
-	var maxX = Number.MIN_SAFE_INTEGER;
-	var minY = Number.MAX_SAFE_INTEGER;
-	var maxY = Number.MIN_SAFE_INTEGER;
 	function dataTransform(d) {
-		var columns = Object.keys(d);
-		for (var i = 0; i < columns.length; i++) {
-			var colname = columns[i];
-			d[colname] = +d[colname];
-			if (i === 0) {
-				//x
-				if (minX > d[colname]) { minX = d[colname]; }
-				if (maxX < d[colname]) { maxX = d[colname]; }
-			} else {
-				//y
-				if (minY > d[colname]) { minY = d[colname]; }
-				if (maxY < d[colname]) { maxY = d[colname]; }
+		// format the data and find min/max
+		var minX = Number.MAX_SAFE_INTEGER;
+		var maxX = Number.MIN_SAFE_INTEGER;
+		var minY = Number.MAX_SAFE_INTEGER;
+		var maxY = Number.MIN_SAFE_INTEGER;
+		var fileLineNo = 0;
+		var data = { "cols" : d[0], "lines" : [] };
+		for (var i = 1; i < d.length; i++) {
+			d[i][0] = +d[i][0];
+			if (d[i][0] > maxX) {
+				maxX = d[i][0];
 			}
+			if (d[i][0] < minX){
+				minX = d[i][0];
+			}
+			for (var j = 1; j < d[i].length; j++) {
+				d[i][j] = +d[i][j];
+				if (d[i][j] > maxY) {
+					maxY = d[i][j];
+				}
+				if (d[i][j] < minY){
+					minY = d[i][j];
+				}
+			}
+			data.lines.push(d[i])
 		}
-		return d;
+		data.minX = minX;
+		data.maxX = maxX;
+		data.minY = minY;
+		data.maxY = maxY;
+		return data;
 	}
-	
-    d3.csv(url, dataTransform, function(error, data) {
+
+	d3.text(url, function(error, data) {
         if (error) throw error;
-        data.minX = minX;
-        data.minY = minY;
-        data.maxX = maxX;
-        data.maxY = maxY;
-        spaghetti(data);
-        lasagna(data);
-        single(data);
+        var d = dataTransform(d3.csvParseRows(data));
+        console.log(d);
+        spaghetti(d);
+        lasagna(d);
+        single(d);
     });
 }
 
@@ -91,8 +100,7 @@ function lasagna(data) {
 	var sampleWidth = 3;
 	
 	//loop over groups/lines
-	var numLines = Object.keys(data[0]).length -1;
-	
+	var numLines = data.cols.length - 1;
 	// scale the range of the data
 	x.domain([data.minX, data.maxX]);
 	y.domain(range(0, numLines));
@@ -100,25 +108,22 @@ function lasagna(data) {
 	
 	for (var lineNo = 0; lineNo < numLines; lineNo++) {
 
-		var colX = "x0";
-		var colY = "x" + (lineNo + 1);
-
 		var thisGroup = graphgroup.append("g")
 									.attr("transform",
 										  "translate(" + margin.left + "," + margin.top + ")");
 
 		var color = linearColorScale(data.minY, data.maxY, /*['#ffffd9', ['#edf8b1',  */ ['#c7e9b4', '#7fcdbb', '#41b6c4', '#1d91c0', '#225ea8', '#253494', '#081d58']);
 
-		//linear interpolation between data points 
-		var linearInt = d3.scaleLinear().domain(data.map((x) => (x[colX])))
-										.range(data.map((x) => (x[colY])));
+		//linear interpolation between data points
+		var linearInt = d3.scaleLinear().domain(data.lines.map((x) => (x[0])))
+										.range(data.lines.map((x) => (x[lineNo + 1])));
 		var samples = new Array();
 		for (var i = 0; i < width; i += sampleWidth) {
 			var xinv = x.invert(i);
 			var val = linearInt(xinv);
 			samples.push([xinv, val]);
 		}
-		
+		console.log(samples);
 		// add rects for color field display.
 		thisGroup.selectAll("rect")
 				   .data(samples)
@@ -200,11 +205,8 @@ function spaghetti(data) {
 	y.domain([0, data.maxY]);
 
 	//loop over groups/lines
-	var numLines = Object.keys(data[0]).length - 1;
+	var numLines = data.cols.length - 1;
 	for (var lineNo = 0; lineNo < numLines; lineNo++) {
-
-		var colX = "x0";
-		var colY = "x" + (lineNo + 1);
 
 		var thisGroup = svg.append("g")
 							.attr("transform",
@@ -212,12 +214,12 @@ function spaghetti(data) {
 
 		// define the line
 		var valueline = d3.line()
-						  .x(function(d) { return x(d[colX]); })
-						  .y(function(d) { return y(d[colY]); });
+						  .x(function(d) { return x(d[0]); })
+						  .y(function(d) { return y(d[lineNo + 1]); });
 
 		// add path to plot
 		thisGroup.append("path")
-				  .data([data])
+				  .data([data.lines])
 				  .attr("class", "line")
 				  .attr("d", valueline)
 				  .style("stroke", color(lineNo));
@@ -254,11 +256,8 @@ function single(data) {
 	y.domain([0, data.maxY]);
 
 	//loop over groups/lines
-	var numLines = Object.keys(data[0]).length - 1;
+	var numLines = data.cols.length - 1;
 	for (var lineNo = 0; lineNo < numLines; lineNo++) {
-
-		var colX = "x0";
-		var colY = "x" + (lineNo + 1);
 
 		//append svg for each line of the plot
 		var svg = d3.select("body").append("svg")
@@ -271,11 +270,11 @@ function single(data) {
 
 		// define the line
 		var valueline = d3.line()
-		  .x(function(d) { return x(d[colX]); })
-		  .y(function(d) { return y(d[colY]); });
+						  .x(function(d) { return x(d[0]); })
+						  .y(function(d) { return y(d[lineNo + 1]); });
 
 		var path = thisGroup.append("path")
-							  .data([data])
+							  .data([data.lines])
 							  .attr("class", "line")
 							  .attr("d", valueline)
 							  .style("stroke", color(lineNo));
