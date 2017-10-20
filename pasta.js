@@ -85,10 +85,10 @@ function lasagna(data) {
 	
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
-        height = 120 - margin.top - margin.bottom;
+        height = 150 - margin.top - margin.bottom;
 	
     var x = d3.scaleLinear().range([0, width]);
-    var y = d3.scaleBand().rangeRound([height-20, 0]).padding(0);
+    var y = d3.scaleBand().rangeRound([height-20, 0]).padding(0.2);
     var colorAxis = d3.scaleLinear().range([0, width]);
 	
     var svg = d3.select("body").append("svg")
@@ -241,32 +241,33 @@ function spaghetti(data) {
 }
 
 function single(data) {
-
+    
     // set the dimensions and margins of the graph
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom;
-
+    
     var color = d3.scaleOrdinal(d3.schemeCategory10);
-
+    
     var x = d3.scaleLinear().range([0, width]);
-    var y = d3.scaleLinear().range([height, 0]);
-
+    
 	x.domain([data.minX, data.maxX]);
-	y.domain([0, data.maxY]);
-
-	//loop over groups/lines
+    
 	var numLines = data.cols.length - 1;
+    
+    var svg = d3.select("body").append("svg")
+                  .attr("width", width + margin.left + margin.right)
+                  .attr("height", height + (10 * numLines) + margin.top + margin.bottom);
+    
+	//loop over groups/lines
 	for (var lineNo = 0; lineNo < numLines; lineNo++) {
-
-		//append svg for each line of the plot
-		var svg = d3.select("body").append("svg")
-		  .attr("width", width + margin.left + margin.right)
-		  .attr("height", height + margin.top + margin.bottom);
+        
+        var y = d3.scaleLinear().range([height / 3, 0]);
+        y.domain([0, d3.max(data.lines.map((x) => (x[lineNo + 1])))]);
 
 		var thisGroup = svg.append("g")
-							.attr("transform",
-								  "translate(" + margin.left + "," + margin.top + ")");
+                            .attr("transform",
+								  "translate(" + margin.left + "," + (margin.top + (lineNo * ( (height / 3) + 10 ))) + ")");
 
 		// define the line
 		var valueline = d3.line()
@@ -279,19 +280,15 @@ function single(data) {
 							  .attr("d", valueline)
 							  .style("stroke", color(lineNo));
 
-		var axisGroup = svg.append("g")
-							.attr("transform",
-								  "translate(" + margin.left + "," + margin.top + ")");
-
-		axisGroup.append("g")
-				  .attr("transform", "translate(0," + height + ")")
-				  .call(d3.axisBottom(x));
-
-		axisGroup.append("g")
-					.call(d3.axisLeft(y));
-		
+		thisGroup.append("g")
+					.call(d3.axisLeft(y).ticks(3));
+    
 	}
-
+    
+    svg.append("g")
+              .attr("transform", "translate(" + margin.left + "," + (margin.top + height + (10 * numLines)) + ")")
+              .call(d3.axisBottom(x));
+    
 }
 
 //start with initial example
