@@ -55,7 +55,6 @@ function doVis(url) {
 	d3.text(url, function(error, data) {
         if (error) throw error;
         var d = dataTransform(d3.csvParseRows(data));
-        console.log(d);
         spaghetti(d);
         lasagna(d);
         single(d);
@@ -83,9 +82,11 @@ function linearColorScale(val1, val2, colors) {
 
 function lasagna(data) {
 	
+	var numLines = data.cols.length - 1;
+	
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
-        height = 150 - margin.top - margin.bottom;
+        height = (numLines * 40) + 50 - margin.top - margin.bottom;
 	
     var x = d3.scaleLinear().range([0, width]);
     var y = d3.scaleBand().rangeRound([height-20, 0]).padding(0.2);
@@ -99,8 +100,6 @@ function lasagna(data) {
 	var lineHeight = 3;
 	var sampleWidth = 3;
 	
-	//loop over groups/lines
-	var numLines = data.cols.length - 1;
 	// scale the range of the data
 	x.domain([data.minX, data.maxX]);
 	y.domain(range(0, numLines));
@@ -123,7 +122,6 @@ function lasagna(data) {
 			var val = linearInt(xinv);
 			samples.push([xinv, val]);
 		}
-		console.log(samples);
 		// add rects for color field display.
 		thisGroup.selectAll("rect")
 				   .data(samples)
