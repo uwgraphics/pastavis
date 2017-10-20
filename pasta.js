@@ -242,18 +242,18 @@ function spaghetti(data) {
 
 function single(data) {
     
+	var numLines = data.cols.length - 1;
+    
     // set the dimensions and margins of the graph
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+        height = (100 * numLines) - margin.top - margin.bottom;
     
     var color = d3.scaleOrdinal(d3.schemeCategory10);
     
     var x = d3.scaleLinear().range([0, width]);
     
 	x.domain([data.minX, data.maxX]);
-    
-	var numLines = data.cols.length - 1;
     
     var svg = d3.select("body").append("svg")
                   .attr("width", width + margin.left + margin.right)
@@ -262,12 +262,12 @@ function single(data) {
 	//loop over groups/lines
 	for (var lineNo = 0; lineNo < numLines; lineNo++) {
         
-        var y = d3.scaleLinear().range([height / 3, 0]);
+        var y = d3.scaleLinear().range([height / numLines, 0]);
         y.domain([0, d3.max(data.lines.map((x) => (x[lineNo + 1])))]);
 
 		var thisGroup = svg.append("g")
                             .attr("transform",
-								  "translate(" + margin.left + "," + (margin.top + (lineNo * ( (height / 3) + 10 ))) + ")");
+								  "translate(" + margin.left + "," + (margin.top + (lineNo * ( (height / numLines) + 10 ))) + ")");
 
 		// define the line
 		var valueline = d3.line()
