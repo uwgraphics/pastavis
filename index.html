@@ -2,32 +2,41 @@
 <meta charset="utf-8">
 
 <head>
-    
-    <style> /* set the CSS */
+
+  <style>
 
     .line {
       fill: none;
       stroke: steelblue;
       stroke-width: 2px;
     }
-    
+
     body {
-	  display: flex;
-	  flex-direction: column;
-	  align-items: center;
-	}
-    
-    </style>
-    
-    <!-- load the d3.js library -->    	
-    <script src="https://d3js.org/d3.v4.min.js"></script>
-    
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #top {
+      margin-top: 50px;
+      margin-bottom: 50px;
+    }
+
+    svg {
+      margin: 50px 50px 50px 50px;
+    }
+
+  </style>
+
+  <!-- load the d3.js library -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
 </head>
 
 <body>
-	<div>
-		<label>load local file: <input id="fileinput" type="file"></input></label>
-    </div>
+  <div id="top">
+    <label>load local file: <input id="fileinput" type="file"></input></label>
+  </div>
 </body>
 
 <script src="pasta.js"></script>
